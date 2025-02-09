@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import "./Modal.css";
+import "./modal.css";
 
 const Modal = ({ isOpen, onClose, onAddRiskCategory, onAddIntervention }) => {
   const [activeTab, setActiveTab] = useState("riskCategory");
   const [newRiskCategory, setNewRiskCategory] = useState({ name: "", effect: "" });
   const [newIntervention, setNewIntervention] = useState({ name: "", effect: "" });
-  const [successMessage, setSuccessMessage] = useState(""); // ✅ Success message state
+  const [successMessage, setSuccessMessage] = useState(""); 
 
   if (!isOpen) return null;
 
@@ -13,9 +13,8 @@ const Modal = ({ isOpen, onClose, onAddRiskCategory, onAddIntervention }) => {
     if (!newRiskCategory.name || !newRiskCategory.effect) return;
     onAddRiskCategory(newRiskCategory);
     setSuccessMessage("Riskkategori tillagd!");
-    setNewRiskCategory({ name: "", effect: "" }); // Clear input fields
+    setNewRiskCategory({ name: "", effect: "" }); 
 
-    // Hide message after 3 seconds
     setTimeout(() => setSuccessMessage(""), 2000);
   };
 
@@ -23,16 +22,14 @@ const Modal = ({ isOpen, onClose, onAddRiskCategory, onAddIntervention }) => {
     if (!newIntervention.name || !newIntervention.effect) return;
     onAddIntervention(newIntervention);
     setSuccessMessage("Åtgärd tillagd!");
-    setNewIntervention({ name: "", effect: "" }); // Clear input fields
+    setNewIntervention({ name: "", effect: "" }); 
 
-    // Hide message after 3 seconds
     setTimeout(() => setSuccessMessage(""), 3000);
   };
 
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        {/* Modal Header */}
         <div className="modal-header">
           <h2 className="modal-title">Lägg till Ny Data</h2>
           <button className="close-button" onClick={onClose}>✖</button>
@@ -58,7 +55,6 @@ const Modal = ({ isOpen, onClose, onAddRiskCategory, onAddIntervention }) => {
         </ul>
 
         <div className="modal-body">
-          {/* Success Message */}
           {successMessage && <p className="success-message">{successMessage}</p>}
 
           {activeTab === "riskCategory" ? (
