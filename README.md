@@ -2,9 +2,8 @@
 
 This is the first version of a model developed to assess the cost-effectiveness of fall prevention interventions.
 This project consists of two repository:
-
-fallkost-api - Backend implemented in Node.js
-fallkost-client - Frontend built with React - This
+- **fallkost-api** - Backend implemented in Node.js
+- **fallkost-client** - rontend built with React - This
 
 ## Getting Started
 
