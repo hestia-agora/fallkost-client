@@ -1,6 +1,6 @@
-# Fallförebyggande-Kostnadskalkyl
+# Fall Prevention Cost Calculation
 
-This is a pilot project for the **Fallförebyggande-Kostnadskalkyl** developed to assess the cost-effectiveness of fall prevention interventions. 
+This is the first version of a model developed to assess the cost-effectiveness of fall prevention interventions.
 
 ## Project Overview
 This project consists of two repositories:
