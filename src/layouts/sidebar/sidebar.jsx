@@ -5,9 +5,8 @@ import Form from "../../components/Form";
 function Sidebar({ setResults }) {
     return (
         <div className={Styles.sidebar}>
-              <h1>Sidebar</h1>
-            <Form setResults={setResults}/>
-      </div>
+                <Form setResults={setResults} />
+            </div>
     );
 }
 
