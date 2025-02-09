@@ -1,17 +1,20 @@
 import React from "react";
-import Calculator from "./components/Calculator"; // Importera kalkylkomponenten
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import AppLayout from "./layouts/app-layout/app-layout"; 
+import MainDashboard from "./pages/main-dashboard"; 
+import Form from "./components/Form"; 
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
-  return (
-    <div className="App">
-      <header>
-   
-      </header>
-      <main>
-        <Calculator /> {/* Rendera kalkylkomponenten */}
-      </main>
-    </div>
-  );
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<AppLayout />}>
+                    <Route index element={<Form />} />
+                </Route>
+            </Routes>
+        </Router>
+    );
 }
 
 export default App;
