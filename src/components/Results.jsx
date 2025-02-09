@@ -5,10 +5,9 @@ function Results({ result }) {
   if (!result) {
     return <p>Något gick fel. Ingen data från servern.</p>;
   }
-
   return (
     <div className="result">
-      <h2 className="resultHeader">Resultat 2</h2>
+      <h2 className="resultHeader">Resultat </h2>
       <p><strong>Total befolkning:</strong> {result.totalPopulation}</p>
       <p><strong>Antal fall utan insats:</strong> {result.fallsWithoutIntervention}</p>
       <p><strong>Totala sjukvårdskostnader utan insats:</strong> {result.totalCostWithoutIntervention} kr</p>
