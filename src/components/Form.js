@@ -1,30 +1,22 @@
 import React, { useState } from "react";
-import "./form.css"; 
-import Modal from "./Modal"; 
+import "./form.css";
+import Modal from "./Modal";
+import { fetchResults } from "../utils/api"; 
+import { riskCategories as initialRiskCategories, interventions as initialInterventions } from "../utils/data";
 
-function Calculator() {
+function Calculator({ setResults }) {
   const [formData, setFormData] = useState({
     totalPopulation: "",
     riskCategoryName: "",
     costPerFall: "",
-    interventionName: "", 
+    interventionName: "",
   });
 
-  const [result, setResult] = useState(null);
   const [errors, setErrors] = useState({});
   const [showModal, setShowModal] = useState(false);
 
-  const [riskCategories, setRiskCategories] = useState([
-    { name: "Risk för lindrigt skadade", effect: 2.4 },
-    { name: "Risk för svårt skadade", effect: 1.8 },
-    { name: "Risk för död", effect: 0.10 },
-  ]);
-
-  const [interventions, setInterventions] = useState([
-    { name: "Fysisk träning", effect: 0.15 },
-    { name: "Miljöanpassning hemtjänst", effect: 0.12 },
-    { name: "Miljöanpassning Fysioterapeut", effect: 0.21 },
-  ]);
+  const [riskCategories, setRiskCategories] = useState(initialRiskCategories);
+  const [interventions, setInterventions] = useState(initialInterventions);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -45,8 +37,8 @@ function Calculator() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate form input
     let validationErrors = {};
-
     if (!formData.totalPopulation) {
       validationErrors.totalPopulation = "Du måste ange en total befolkning.";
     }
@@ -65,41 +57,12 @@ function Calculator() {
       return;
     }
 
-    // Find the effect values for the selected category and intervention
-    const selectedRiskCategory = riskCategories.find(cat => cat.name === formData.riskCategoryName);
-    const selectedIntervention = interventions.find(int => int.name === formData.interventionName);
-
-    if (!selectedRiskCategory || !selectedIntervention) {
-      alert("Ogiltigt val av riskkategori eller åtgärd.");
-      return;
-    }
-
-    const data = {
-      totalPopulation: parseFloat(formData.totalPopulation),
-      riskCategoryEffect: selectedRiskCategory.effect, // Send the effect value instead of name
-      costPerFall: parseFloat(formData.costPerFall),
-      interventionEffect: selectedIntervention.effect, // Send the effect value instead of name
-    };
-
     try {
-      const response = await fetch("http://localhost:5000/calculate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API Error:", errorData);
-        alert(errorData.error || "Något gick fel. Försök igen.");
-        return;
-      }
-
-      const resultData = await response.json();
-      setResult(resultData);
+      // Use the API function to send data
+      const resultData = await fetchResults(formData, riskCategories, interventions);
+      setResults(resultData); // Update parent state with results
     } catch (error) {
-      console.error("Network or server error:", error);
-      alert("Kunde inte ansluta till servern.");
+      alert(error.message); // Display the error to the user
     }
   };
 
@@ -116,7 +79,7 @@ function Calculator() {
       <h1 className="header">Fallförebyggande-Kostnadskalkyl</h1>
       <form onSubmit={handleSubmit} className="form">
         <label className="label">
-          Total befolkning (antal personer mellan 65 - 99+ ):
+          Total befolkning:
           <input
             type="number"
             name="totalPopulation"
@@ -129,12 +92,7 @@ function Calculator() {
 
         <label className="label">
           Välj andel med skador:
-          <select
-            name="riskCategoryName"
-            value={formData.riskCategoryName}
-            onChange={handleChange}
-            className="select"
-          >
+          <select name="riskCategoryName" value={formData.riskCategoryName} onChange={handleChange} className="select">
             <option value="">-- Välj en kategori --</option>
             {riskCategories.map((category) => (
               <option key={category.name} value={category.name}>
@@ -159,12 +117,7 @@ function Calculator() {
 
         <label className="label">
           Välj åtgärd:
-          <select
-            name="interventionName" 
-            value={formData.interventionName}
-            onChange={handleChange}
-            className="select"
-          >
+          <select name="interventionName" value={formData.interventionName} onChange={handleChange} className="select">
             <option value="">-- Välj en åtgärd --</option>
             {interventions.map((intervention) => (
               <option key={intervention.name} value={intervention.name}>
@@ -175,22 +128,8 @@ function Calculator() {
           {errors.interventionName && <p className="error-message">{errors.interventionName}</p>}
         </label>
 
-        <button type="submit" className="button">
-          Beräkna
-        </button>
+        <button type="submit" className="button">Beräkna</button>
       </form>
-
-      {result && (
-        <div className="result">
-          <h2 className="resultHeader">Resultat</h2>
-          <p>Total befolkning: {result.totalPopulation}</p>
-          <p>Antal fall utan insats: {result.fallsWithoutIntervention}</p>
-          <p>Totala sjukvårdskostnader utan insats: {result.totalCostWithoutIntervention} kr</p>
-          <p>Antal fall med insats: {result.fallsWithIntervention}</p>
-          <p>Totala sjukvårdskostnader med insats: {result.totalCostWithIntervention} kr</p>
-          <p>Besparing: {result.savingsPerYear} kr</p>
-        </div>
-      )}
     </div>
   );
 }
