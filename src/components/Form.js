@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import "./Calculator.css"; 
+import "./form.css"; 
+import Modal from "./Modal"; 
 
 function Calculator() {
   const [formData, setFormData] = useState({
@@ -11,87 +12,107 @@ function Calculator() {
 
   const [result, setResult] = useState(null);
   const [errors, setErrors] = useState({});
+  const [showModal, setShowModal] = useState(false);
 
-  const riskCategories = [
+  const [riskCategories, setRiskCategories] = useState([
     { name: "Risk för lindrigt skadade", effect: 2.4 },
     { name: "Risk för svårt skadade", effect: 1.8 },
     { name: "Risk för död", effect: 0.10 },
-  ];
+  ]);
 
-  const interventions = [
+  const [interventions, setInterventions] = useState([
     { name: "Fysisk träning", effect: 0.15 },
     { name: "Miljöanpassning hemtjänst", effect: 0.12 },
     { name: "Miljöanpassning Fysioterapeut", effect: 0.21 },
-  ];
+  ]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-
     setErrors({ ...errors, [name]: "" });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  let validationErrors = {};
-
-  if (!formData.totalPopulation) {
-    validationErrors.totalPopulation = "Du måste ange en total befolkning.";
-  }
-  if (!formData.riskCategoryName) {
-    validationErrors.riskCategoryName = "Du måste välja en skadekategori.";
-  }
-  if (!formData.costPerFall) {
-    validationErrors.costPerFall = "Du måste ange sjukvårdskostnad per fall.";
-  }
-  if (!formData.interventionName) { 
-    validationErrors.interventionName = "Du måste välja en åtgärd.";
-  }
-
-  if (Object.keys(validationErrors).length > 0) {
-    setErrors(validationErrors);
-    return;
-  }
-
-  const data = {
-    totalPopulation: parseFloat(formData.totalPopulation),
-    riskCategoryName: formData.riskCategoryName,
-    costPerFall: parseFloat(formData.costPerFall),
-    interventionName: formData.interventionName,
+  const addRiskCategory = (newCategory) => {
+    if (!newCategory.name || !newCategory.effect) return;
+    setRiskCategories([...riskCategories, { name: newCategory.name, effect: parseFloat(newCategory.effect) }]);
   };
 
-  try {
-    const response = await fetch("http://localhost:5000/calculate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+  const addIntervention = (newIntervention) => {
+    if (!newIntervention.name || !newIntervention.effect) return;
+    setInterventions([...interventions, { name: newIntervention.name, effect: parseFloat(newIntervention.effect) }]);
+  };
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("API Error:", errorData);
-      alert(errorData.error || "Något gick fel. Försök igen.");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    let validationErrors = {};
+
+    if (!formData.totalPopulation) {
+      validationErrors.totalPopulation = "Du måste ange en total befolkning.";
+    }
+    if (!formData.riskCategoryName) {
+      validationErrors.riskCategoryName = "Du måste välja en skadekategori.";
+    }
+    if (!formData.costPerFall) {
+      validationErrors.costPerFall = "Du måste ange sjukvårdskostnad per fall.";
+    }
+    if (!formData.interventionName) { 
+      validationErrors.interventionName = "Du måste välja en åtgärd.";
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
-    const resultData = await response.json();
+    // Find the effect values for the selected category and intervention
+    const selectedRiskCategory = riskCategories.find(cat => cat.name === formData.riskCategoryName);
+    const selectedIntervention = interventions.find(int => int.name === formData.interventionName);
 
-    if (resultData.totalCostWithoutIntervention !== undefined) {
-      setResult(resultData);
-    } else {
-      console.error("API returned incomplete data:", resultData);
-      alert("Beräkningen misslyckades. Försök igen.");
+    if (!selectedRiskCategory || !selectedIntervention) {
+      alert("Ogiltigt val av riskkategori eller åtgärd.");
+      return;
     }
-  } catch (error) {
-    console.error("Network or server error:", error);
-    alert("Kunde inte ansluta till servern.");
-  }
-};
 
+    const data = {
+      totalPopulation: parseFloat(formData.totalPopulation),
+      riskCategoryEffect: selectedRiskCategory.effect, // Send the effect value instead of name
+      costPerFall: parseFloat(formData.costPerFall),
+      interventionEffect: selectedIntervention.effect, // Send the effect value instead of name
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("API Error:", errorData);
+        alert(errorData.error || "Något gick fel. Försök igen.");
+        return;
+      }
+
+      const resultData = await response.json();
+      setResult(resultData);
+    } catch (error) {
+      console.error("Network or server error:", error);
+      alert("Kunde inte ansluta till servern.");
+    }
+  };
 
   return (
     <div className="container">
+      <button className="button" onClick={() => setShowModal(true)}> Lägg till Riskkategori / Åtgärd</button>
+      <Modal 
+        isOpen={showModal} 
+        onClose={() => setShowModal(false)} 
+        onAddRiskCategory={addRiskCategory} 
+        onAddIntervention={addIntervention} 
+      />
+
       <h1 className="header">Fallförebyggande-Kostnadskalkyl</h1>
       <form onSubmit={handleSubmit} className="form">
         <label className="label">
@@ -147,7 +168,7 @@ const handleSubmit = async (e) => {
             <option value="">-- Välj en åtgärd --</option>
             {interventions.map((intervention) => (
               <option key={intervention.name} value={intervention.name}>
-                {intervention.name} ({intervention.effect * 100}% effekt)
+                {intervention.name} ({intervention.effect}% effekt)
               </option>
             ))}
           </select>
@@ -164,16 +185,10 @@ const handleSubmit = async (e) => {
           <h2 className="resultHeader">Resultat</h2>
           <p>Total befolkning: {result.totalPopulation}</p>
           <p>Antal fall utan insats: {result.fallsWithoutIntervention}</p>
-          <p>
-            Totala sjukvårdskostnader för fall utan insats:{" "}
-            {result.totalCostWithoutIntervention.toFixed(0)} kr
-          </p>
+          <p>Totala sjukvårdskostnader utan insats: {result.totalCostWithoutIntervention} kr</p>
           <p>Antal fall med insats: {result.fallsWithIntervention}</p>
-          <p>
-            Totala sjukvårdskostnader för fall med insats:{" "}
-            {result.totalCostWithIntervention.toFixed(0)} kr
-          </p>
-          <p>Besparing: {result.savingsPerYear.toFixed(0)} kr</p>
+          <p>Totala sjukvårdskostnader med insats: {result.totalCostWithIntervention} kr</p>
+          <p>Besparing: {result.savingsPerYear} kr</p>
         </div>
       )}
     </div>
