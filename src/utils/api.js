@@ -1,21 +1,38 @@
-import axios from 'axios';
+export const fetchResults = async (formData, riskCategories, interventions) => {
+  console.log("Sending request with data:", formData); // Debugging
+  
+  const selectedRiskCategory = riskCategories.find(cat => cat.name === formData.riskCategoryName);
+  const selectedIntervention = interventions.find(int => int.name === formData.interventionName);
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL ||
-  (process.env.NODE_ENV === 'development'
-    ? 'http://127.0.0.1:5000'
-    : 'https://web-production-744e.up.railway.app');
+  if (!selectedRiskCategory || !selectedIntervention) {
+    throw new Error("Ogiltigt val av riskkategori eller åtgärd.");
+  }
 
-export const runModel = async (params) => {
+  const data = {
+    totalPopulation: parseFloat(formData.totalPopulation),
+    riskCategoryEffect: selectedRiskCategory.effect,
+    costPerFall: parseFloat(formData.costPerFall),
+    interventionEffect: selectedIntervention.effect,
+  };
+
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/`,
-      params,
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-    return response.data;
+    const response = await fetch("http://localhost:5000/calculate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    console.log("Server Response Status:", response.status); // Debugging
+
+    if (!response.ok) {
+      throw new Error(`API error, status: ${response.status}`);
+    }
+
+    const resultData = await response.json();
+    console.log("Received result data:", resultData); // Debugging
+    return resultData;
   } catch (error) {
-    console.error("Error running model:", error.message || error);
+    console.error("Fetch error:", error); // Log errors
     throw error;
   }
 };
