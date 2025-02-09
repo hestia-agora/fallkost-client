@@ -1,0 +1,16 @@
+.sidebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+  gap: 10rem;
+  margin: 20px;
+  margin-top: 80px;
+  padding: 5px;
+  height: 60%;
+}
+
+.logoImage {
+  width: 50%;
+  margin: var(--spacing-md);
+}
